@@ -1,15 +1,14 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-import html  # для экранирования спецсимволов в HTML
+import html
 
-# ===== НАСТРОЙКИ =====
 BASE_URL = 'https://qarocks.ru/test_post/istqb-big-quiz/'
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 DELAY = 2  # задержка между запросами (секунд)
-OUTPUT_HTML = 'istqb_report.html'  # имя итогового файла
+OUTPUT_HTML = 'istqb_report.html'
 
 
 # ===== ПАРСИНГ ОДНОЙ СТРАНИЦЫ =====
@@ -28,7 +27,6 @@ def parse_page(url):
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Находим все блоки вопросов
     question_blocks = soup.find_all('div', class_='quastion')
     if not question_blocks:
         print("⚠️ Блоки вопросов не найдены. Возможно, изменилась структура сайта.")
@@ -37,30 +35,27 @@ def parse_page(url):
     page_questions = []
 
     for q_block in question_blocks:
-        # --- Извлекаем текст вопроса ---
-        # Обычно вопрос лежит в <p>, но на всякий случай берём текст всего блока, если <p> нет
+
         p_tag = q_block.find('p')
         question_text = p_tag.get_text(strip=True) if p_tag else q_block.get_text(strip=True)
 
-        # --- Ищем форму с ответами (идёт сразу после вопроса) ---
         form = q_block.find_next_sibling('form', class_='quastion_form')
         if not form:
             print(f"⚠️ Не найдена форма для вопроса: {question_text[:50]}...")
             continue
 
-        # --- Собираем все ответы внутри формы ---
         answer_blocks = form.find_all('div', class_='answer_block')
         answers_data = []
 
         for ans in answer_blocks:
-            # Текст ответа (избавляемся от лишних пробелов и переносов)
+
             answer_text = ans.get_text(strip=True)
 
-            # Ищем родительский <label> для этого ответа
+
             label = ans.find_parent('label')
             is_correct = False
             if label:
-                # После label идёт <div class="notice"> с вердиктом
+
                 notice = label.find_next_sibling('div', class_='notice')
                 if notice:
                     notice_title = notice.find('div', class_='notice_title')
@@ -77,7 +72,7 @@ def parse_page(url):
             'answers': answers_data
         })
 
-    # --- Ищем кнопку перехода на следующую страницу ---
+
     next_button = soup.find('div', class_='next_btn')
     next_url = None
     if next_button and 'disabled' not in next_button.get('class', []):
@@ -88,7 +83,6 @@ def parse_page(url):
     return page_questions, next_url
 
 
-# ===== ГЕНЕРАЦИЯ HTML-ОТЧЁТА =====
 def generate_html_report(questions, filename):
     """
     Создаёт красивый HTML-файл с таблицей вопросов и ответов.
@@ -188,13 +182,11 @@ def generate_html_report(questions, filename):
 </body>
 </html>'''
 
-    # Формируем содержимое для каждого вопроса
     content_parts = []
     for idx, q in enumerate(questions, start=1):
-        # Экранируем HTML-спецсимволы в тексте вопроса
+        
         question_escaped = html.escape(q['question'])
 
-        # Собираем ответы
         answers_html = ''
         for ans in q['answers']:
             answer_escaped = html.escape(ans['text'])
@@ -219,7 +211,6 @@ def generate_html_report(questions, filename):
 
     full_content = '\n'.join(content_parts)
 
-    # Подставляем данные в шаблон
     from datetime import datetime
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
     html_output = html_template.format(total=len(questions), content=full_content, date=now)
@@ -229,8 +220,6 @@ def generate_html_report(questions, filename):
 
     print(f"\n✅ HTML-отчёт сохранён: {filename}")
 
-
-# ===== ОСНОВНАЯ ПРОГРАММА =====
 def main():
     all_questions = []
     current_url = BASE_URL
@@ -240,7 +229,7 @@ def main():
         questions, next_url = parse_page(current_url)
 
         if questions is None:
-            break  # критическая ошибка
+            break
         if questions:
             print(f"   → Найдено вопросов на странице: {len(questions)}")
             all_questions.extend(questions)
