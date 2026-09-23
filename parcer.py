@@ -7,11 +7,9 @@ BASE_URL = 'https://qarocks.ru/test_post/istqb-big-quiz/'
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
-DELAY = 2  # задержка между запросами (секунд)
+DELAY = 2
 OUTPUT_HTML = 'istqb_report.html'
 
-
-# ===== ПАРСИНГ ОДНОЙ СТРАНИЦЫ =====
 def parse_page(url):
     """
     Возвращает кортеж (список_вопросов_на_странице, ссылка_на_следующую_страницу)
@@ -85,7 +83,7 @@ def parse_page(url):
 
 def generate_html_report(questions, filename):
     """
-    Создаёт красивый HTML-файл с таблицей вопросов и ответов.
+    Создаёт HTML-файл с таблицей вопросов и ответов.
     Правильные ответы выделены зелёным, неправильные — красным.
     """
     html_template = '''<!DOCTYPE html>
